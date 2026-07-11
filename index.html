@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Happy One Year My Love - Find ME!!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gold:#f6d186; --cream:#fbf6ee; --ink:#2b2140; --teal:#6fcfc0; --pink:#e79bb0; --sunset:#f2966b;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#161029;}
+  body{font-family:'Nunito',sans-serif; color:var(--cream);}
+  .pixel{font-family:'Press Start 2P',monospace;}
+
+  .life-icon{
+    width: 64px;
+    height:64px;
+    object-fit:contain;
+  }
+
+  #screen-title{
+    position:fixed; inset:0; z-index:9; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; padding:28px;
+    background:linear-gradient(180deg,#D60270,#9B4F96, #0038A8);
+  }
+  h1.title{font-size:clamp(1.2rem,6vw,2rem); line-height:1.7; margin:0; text-shadow:3px 3px 0 #000000;}
+  .title-sub{font-size:12px; color:var(--gold); margin-top:14px; font-weight:700;}
+  .worlds-preview{display:flex; gap:8px; margin:26px 0; flex-wrap:wrap; justify-content:center; max-width:360px;}
+  .worlds-preview span{font-size:24px;}
+  button.primary{
+    font-family:'Press Start 2P',monospace; font-size:12px; background:linear-gradient(135deg,var(--sunset),var(--pink));
+    color:var(--ink); border:none; padding:16px 26px; border-radius:6px; cursor: url('pics/funnyfunny_cursor.png') 4 12, pointer;
+    box-shadow:0 6px 0 #a85f45, 0 10px 20px rgba(0,0,0,.4);
+  }
+  button.primary:active{transform:translateY(4px); box-shadow:0 2px 0 #a85f45;}
+  .howto{margin-top:20px; font-size:11.5px; color:#c9d6e8; max-width:300px; line-height:1.7;}
+  .howto b{color:var(--gold);}
+
+  #screen-game{position:fixed; inset:0; display:none;}
+  #screen-game.active{display:block;}
+  #game-canvas{position:absolute; inset:0; display:block;}
+
+  #hud{position:absolute; top:14px; left:14px; right:14px; z-index:3; display:flex; justify-content:space-between; align-items:flex-start; font-size:10px;}
+  #hud .pill{background:rgba(13,22,38,.7); border:1px solid rgba(246,209,134,.4); padding:7px 12px; border-radius:8px; display:flex; align-items:center; gap:4px;}
+
+  #controls{position:absolute; bottom:0; left:0; right:0; z-index:4; display:flex; justify-content:space-between; align-items:flex-end; padding:18px; pointer-events:none;}
+  #controls button{pointer-events:auto; width:58px; height:58px; border-radius:14px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); color:var(--cream); font-size:22px;}
+  #controls button:active{background:rgba(246,209,134,.4);}
+  #move-pad{display:flex; gap:10px;}
+  #jump-pad button{width:70px; height:70px; border-radius:50%; background:linear-gradient(135deg,var(--sunset),var(--pink)); box-shadow:0 6px 0 #a85f45;}
+  #jump-pad button:active{transform:translateY(4px); box-shadow:0 2px 0 #a85f45;}
+  #hint-desktop{position:absolute; bottom:16px; left:50%; transform:translateX(-50%); font-size:10.5px; color:#c9d6e8; z-index:3; text-align:center;}
+  @media (hover:hover) and (pointer:fine){ #controls{display:none;} }
+  @media (hover:none){ #hint-desktop{display:none;} }
+
+  .card-overlay{
+    position:absolute; inset:0; z-index:6; display:none; align-items:center; justify-content:center;
+    background:rgba(10,8,20,.82); text-align:center; padding:24px; flex-direction:column; gap:14px;
+  }
+  .card-overlay.show{display:flex;}
+  .card-title{font-family:'Press Start 2P',monospace; font-size:18px; color:var(--gold); line-height:1.6;}
+  .card-sub{font-size:14px; color:var(--cream);}
+  .card-btn{
+    font-family:'Press Start 2P',monospace; font-size:12px; background:var(--teal); color:var(--ink); border:none; padding:12px 22px; 
+    border-radius:8px; cursor: url('pics/funnyfunny_cursor.png') 4 12, pointer; box-shadow:0 4px 0 #4a9a8c;
+  }
+  .card-btn:active{transform:translateY(4px); box-shadow:0 0 0 #4a9a8c;}
+
+  #screen-finale{
+    position:fixed; inset:0; z-index:8; display:none; flex-direction:column; align-items:center; justify-content:center;
+    padding:34px 20px; text-align:center; background:radial-gradient(circle at 50% 20%, #3a2b5e, #161029 75%); overflow-y:auto;
+  }
+  #screen-finale.active{display:flex;}
+  #screen-finale h2{font-family:'Press Start 2P',monospace; font-size:clamp(1rem,4.5vw,1.5rem); margin-bottom:10px; line-height:1.8; color:var(--gold);}
+  #screen-finale .sub{color:var(--teal); font-weight:700; margin-bottom:24px; font-size:13px;}
+  .slideshow{position:relative; width:min(88vw,360px); height:min(88vw,360px); max-height:400px;}
+  .slide{position:absolute; inset:0; border-radius:16px; padding:16px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; opacity:0; transform:scale(.94) rotate(-2deg); transition:opacity .5s ease, transform .5s ease; box-shadow:0 20px 40px rgba(0,0,0,.4); border:6px solid var(--cream); background-color:#33265a;}
+  .slide.active{opacity:1; transform:scale(1) rotate(0deg); z-index:3;}
+  .slide .cap{font-family:'Nunito',sans-serif; font-weight:700; color:var(--ink); background:var(--cream); padding:6px 10px; border-radius:8px; font-size:12px; margin-top:auto;}
+  .slide-controls{display:flex; gap:16px; align-items:center; margin-top:20px;}
+  .slide-controls button{background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.3); color:var(--cream); width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:15px;}
+  .dots{display:flex; gap:6px;} .dot{width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.25);} .dot.on{background:var(--gold);}
+  .closing-msg{max-width:440px; margin-top:26px; font-size:15px; line-height:1.7; color:#f0e8fb;}
+  .closing-msg b{color:var(--gold); font-family:'Nunito',sans-serif;}
+
+  canvas#confetti{position:fixed; inset:0; pointer-events:none; z-index:20;}
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important;} }
+</style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+
+<div id="screen-title">
+  <div class="pixel title-sub" style="margin-bottom:12px;">PRESS START</div>
+  <h1 class="title pixel">HAPPY ONE YEAR MY LOVE<br>FIND ME!!</h1>
+  <div class="worlds-preview">
+    <span>💛</span><span>💛</span><span>💛</span><span>💛</span><span>💛</span><span>💛</span>
+  </div>
+  <button class="primary" onclick="startGame()">▶ START</button>
+  <p class="howto">Arrow keys / WASD to move, <b>Space or Up</b> to jump</p>
+</div>
+
+<div id="screen-game">
+  <canvas id="game-canvas"></canvas>
+  <div id="hud">
+    <div class="pill pixel" id="hud-level">WORLD 1</div>
+    <div class="pill pixel" id="hud-lives">
+        <img src="pics/heart_toes.png" alt="life" class="life-icon">
+        <img src="pics/heart_toes.png" alt="life" class="life-icon">
+        <img src="pics/heart_toes.png" alt="life" class="life-icon">
+    </div>
+    <div class="pill pixel" id="hud-collect">💛 0</div>
+  </div>
+  <div id="hint-desktop">← → to move &nbsp;•&nbsp; SPACE to jump</div>
+  <div id="controls">
+    <div id="move-pad">
+      <button id="btn-left">◀</button>
+      <button id="btn-right">▶</button>
+    </div>
+    <div id="jump-pad"><button id="btn-jump">⬆</button></div>
+  </div>
+
+  <div class="card-overlay" id="intro-card">
+    <div class="card-title pixel" id="intro-title"></div>
+    <div class="card-sub" id="intro-sub"></div>
+    <button class="card-btn" onclick="beginLevel()">GO ▶</button>
+  </div>
+
+  <div class="card-overlay" id="clear-card">
+    <div class="card-title pixel">LEVEL CLEAR!</div>
+    <div class="card-sub" id="clear-sub"></div>
+    <button class="card-btn" onclick="nextLevel()">NEXT ▶</button>
+  </div>
+
+  <div class="card-overlay" id="found-card">
+    <div class="card-title pixel">YOU FOUND ME 💛</div>
+    <div class="card-sub">happy one year, my love.</div>
+    <button class="card-btn" onclick="goFinaleEpilogue()">OPEN THE ALBUM ▶</button>
+  </div>
+
+  <div class="card-overlay" id="retry-card">
+    <div class="card-title pixel">TRY AGAIN!</div>
+    <div class="card-sub" id="retry-sub"></div>
+    <button class="card-btn" onclick="retryLevel()">RETRY ▶</button>
+  </div>
+</div>
+
+<div id="screen-finale">
+  <h2>HAPPY ONE YEAR<br>MY LOVE</h2>
+  <div class="sub pixel" style="font-size:11px;">GAME COMPLETE</div>
+  <div class="pixel" id="final-score" style="font-size:12px; color:var(--gold); margin-bottom:22px;"></div>
+  <div class="slideshow" id="slideshow"></div>
+  <div class="slide-controls">
+    <button onclick="shiftSlide(-1)">‹</button>
+    <div class="dots" id="dots"></div>
+    <button onclick="shiftSlide(1)">›</button>
+  </div>
+  <div class="closing-msg">
+    I WUB YOU 💛
+  </div>
+</div>
+
+<script>
+/* ======================================================================
+   PLAYER SPRITE (pixel art) — black long straight hair, medium/tan skin
+   ====================================================================== */
+const T=1,H=2,S=3,J=4,SH=5; // hair, skin, shirt, jeans/pants, shoe (color codes)
+const PALETTE = { 1:'#1a1a1a', 2:'#c98a5b', 3:'#8968CD', 4:'#171E27', 5:'#c8c7ce' };
+const FRAME_STAND = [
+ [0,0,1,1,1,1,1,1,0,0],
+ [0,1,1,1,1,1,1,1,1,0],
+ [1,1,2,2,2,2,2,2,1,1],
+ [1,2,2,1,2,2,1,2,2,1],
+ [1,2,2,1,2,2,1,2,2,1],
+ [0,1,2,2,2,2,2,2,1,0],
+ [0,1,3,3,3,3,3,3,1,0],
+ [0,0,3,3,3,3,3,3,0,0],
+ [0,2,3,3,3,3,3,3,2,0],
+ [0,2,3,3,3,3,3,3,2,0],
+ [0,0,0,4,4,4,4,0,0,0],
+ [0,0,0,4,4,4,4,0,0,0],
+ [0,0,4,4,4,4,4,4,0,0],
+ [0,0,4,4,0,0,4,4,0,0],
+ [0,0,5,5,0,0,5,5,0,0]
+];
+
+const FRAME_WALK_A = FRAME_STAND.map(r=>r.slice());
+FRAME_WALK_A[13]=[0,4,4,0,0,0,4,4,0,0];
+FRAME_WALK_A[14]=[0,5,5,0,0,0,0,5,5,0];
+// FRAME_WALK_A[15]=[0,5,5,0,0,0,0,5,5,0];
+const FRAME_WALK_B = FRAME_STAND.map(r=>r.slice());
+FRAME_WALK_B[13]=[0,0,4,4,0,0,4,4,0,0];
+FRAME_WALK_B[14]=[0,0,0,5,5,0,5,5,0,0];
+// FRAME_WALK_B[15]=[0,0,0,5,5,0,5,5,0,0];
+const FRAME_JUMP = FRAME_STAND.map(r=>r.slice());
+FRAME_JUMP[12]=[0,0,4,4,4,4,4,4,0,0];
+FRAME_JUMP[13]=[0,0,4,4,0,0,4,4,0,0];
+FRAME_JUMP[14]=[0,0,5,5,0,0,5,5,0,0];
+// FRAME_JUMP[15]=[0,0,0,0,0,0,0,0,0,0];
+
+// "me" sprite — short brown hair, teal shirt
+const PALETTE_ME = { 1:'#372e2c', 2:'#deb5ac', 3:'#100f15', 4:'#6d665c', 5:'#fbfbef', 6:'#7FB4BE' };
+const FRAME_ME = [
+ [0,0,0,1,1,1,1,0,0,0],
+ [0,0,1,1,1,1,1,1,0,0],
+ [0,1,2,2,2,2,2,2,1,0],
+ [1,2,2,6,2,2,6,2,2,1],
+ [1,2,2,6,2,2,6,2,2,1],
+ [0,2,2,2,2,2,2,2,2,0],
+ [0,0,3,3,3,3,3,3,0,0],
+ [0,3,3,3,3,3,3,3,3,0],
+ [0,2,3,3,3,3,3,3,2,0],
+ [0,2,3,3,3,3,3,3,2,0],
+ [0,2,0,4,4,4,4,0,2,0],
+ [0,0,0,4,4,4,4,0,0,0],
+ [0,0,0,4,4,4,4,0,0,0],
+ [0,0,4,4,0,0,4,4,0,0],
+ [0,0,4,4,0,0,4,4,0,0],
+ [0,0,5,5,0,0,5,5,0,0]
+];
+
+function drawSprite(ctx, matrix, palette, cx, feetY, facing, px){
+  const rows=matrix.length, cols=matrix[0].length;
+  ctx.save();
+  ctx.translate(cx, feetY - rows*px);
+  ctx.scale(facing,1);
+  const xOff = -cols*px/2;
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const v = matrix[r][c];
+      if(v){ ctx.fillStyle = palette[v]; ctx.fillRect(xOff + c*px, r*px, px+0.5, px+0.5); }
+    }
+  }
+  ctx.restore();
+}
+
+// soft, understated shadow beneath a sprite's feet — helps it read against
+// a busy photo background without calling attention to itself
+function drawShadow(ctx, cx, feetY){
+  ctx.save();
+  ctx.globalAlpha = 0.22;
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.ellipse(cx, feetY+3, 15, 5, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ======================================================================
+   LEVEL DEFINITIONS
+   ====================================================================== */
+// ---- physics-derived jump limits (see GRAVITY/JUMP_V/MOVE_SPEED above) ----
+const MAX_JUMP_DIST = 190;   // horizontal px clearable in one full jump
+const MAX_JUMP_RISE = 128;   // vertical px reachable in one full jump
+
+function randRange(min, max){ return min + Math.random()*(max-min); }
+
+// difficulty: 1 = easiest (World 1), increase per world for tighter margins
+//
+// NOTE: only two feature types now, by design — a gap is EITHER a clean jump
+// (no platform at all) OR a solid-ground stretch with a floating platform
+// above it. A platform never spans the x-range of a gap, so there's no more
+// "platform floating over a hole with nothing under it" case.
+function buildRandomLayout(width, difficulty=1){
+  const gaps = [];
+  const platforms = [];
+  const collectibles = [];
+
+  let x = 260;                 // clear space after spawn
+  const margin = 340;          // keep goal area clear
+
+  while (x < width - margin) {
+    const roll = Math.random();
+
+    if (roll < 0.55) {
+      // clean-jump gap, no platform — sits near the max clearable distance
+      const gapW = randRange(MAX_JUMP_DIST*0.6, MAX_JUMP_DIST*0.9 + difficulty*3);
+      gaps.push({ x, w: gapW });
+      x += gapW + randRange(160 - difficulty*4, 260 - difficulty*8);
+
+    } else {
+      // floating platform, solid ground underneath — vertical-only challenge,
+      // never overlaps a gap
+      platforms.push({
+        x, w: randRange(60, 105),
+        rise: randRange(MAX_JUMP_RISE*0.4, MAX_JUMP_RISE*0.92)
+      });
+      x += randRange(170, 250);
+    }
+  }
+
+  let cx = 120;
+  while (cx < width - 150) {
+    // keep ground-level (rise 0) collectibles OUT of gaps — a coin sitting at
+    // ground height over a pit is basically uncollectable
+    let rise = Math.random() < 0.5 ? 0 : randRange(60, MAX_JUMP_RISE);
+    if (rise === 0 && gaps.some(g => cx > g.x-20 && cx < g.x+g.w+20)) {
+      rise = randRange(60, MAX_JUMP_RISE);
+    }
+    collectibles.push({ x: cx, rise });
+    cx += randRange(130 - difficulty*3, 210 - difficulty*5);
+  }
+
+  return { gaps, platforms, collectibles };
+}
+
+// ===== WORLD 6 — FIND ME =====
+// The entire floor is one continuous pit; the only way across is the chain
+// of platforms. The final platform is where "me" stands, and where the
+// player must land to finish.
+function buildFinaleLayout(level){
+  const gaps = [{ x:0, w: level.width }];
+  const platforms = [];
+  let x = 150;
+  const margin = 210;
+  while (x < level.width - margin) {
+    platforms.push({ x, w: randRange(115,155), rise: randRange(40,150) });
+    x += randRange(150,205);
+  }
+  const meRise = 70;
+  platforms.push({ x: level.width-90, w:160, rise: meRise });
+
+  const collectibles = platforms
+    .filter((p,i)=> i>0 && i<platforms.length-1 && Math.random()<0.7)
+    .map(p=>({ x:p.x, rise:p.rise+40 }));
+
+  return { gaps, platforms, collectibles, meRise };
+}
+
+const LEVELS = [
+  { name:'WORLD 1', subtitle:'THE AQUARIUM', width:2200,
+    sky:['#0a3d5c','#1f6f96'], ground:'#2C6E8F', groundTop:'#7EC7D3',
+    decor:[''], collectEmoji:'💛',
+    enemyTypes:['🪼','🦑','🐠'], difficulty:1, 
+    photos:['world_1_pics/IMG_2358.jpg', 'world_1_pics/IMG_2360.jpg', 'world_1_pics/IMG_2590.jpg', 'world_1_pics/IMG_2593.jpg', 'world_1_pics/IMG_2598.jpg', 'world_1_pics/IMG_2599.jpg', 'world_1_pics/IMG_2601.jpg', 'world_1_pics/IMG_2603.jpg'] },
+  { name:'WORLD 2', subtitle:'THE MINECRAFT WORLD', width:2200,
+    sky:['#5fb6e0','#bfe6f5'], ground:'#8b5a2b', groundTop:'#5aa350',
+    decor:[''], collectEmoji:'💛',
+    enemyTypes:['🧟','🕷️'], difficulty:2, 
+    photos:['world_2_pics/2026-01-19_18.48.04.png', 'world_2_pics/2026-03-03_23.49.39.png', 'world_2_pics/2026-07-10_23.08.18.png', 'world_2_pics/2026-07-10_23.08.47.png', 'world_2_pics/2026-07-10_23.09.24.png', 'world_2_pics/2026-07-10_23.16.20.png', 'world_2_pics/2026-07-10_23.16.43.png'] },
+  { name:'WORLD 3', subtitle:'THE LIVING ROOM', width:2000,
+    sky:['#4a3573','#8a6aa8'], ground:'#3A383B', groundTop:'#7A7980',
+    decor:[''], collectEmoji:'💛',
+    enemyTypes:['🧹','🍿'], difficulty:3, 
+    photos:['world_3_pics/IMG_0129.jpg', 'world_3_pics/IMG_0133.jpg', 'world_3_pics/IMG_2380.jpg', 'world_3_pics/IMG_2386.jpg', 'world_3_pics/IMG_2394.jpg', 'world_3_pics/IMG_2455.jpg', 'world_3_pics/IMG_2955.jpg', 'world_3_pics/IMG_2964.jpg', 'world_3_pics/IMG_3356.jpg'] },
+  { name:'WORLD 4', subtitle:'THE BEACH', width:2200,
+    sky:['#f2966b','#e79bb0'], ground:'#d9b96a', groundTop:'#e8cf8a',
+    decor:[''], collectEmoji:'💛',
+    enemyTypes:['🦀','🐚'], difficulty:4, 
+    photos:['world_4_pics/20250510_184507_Original.jpg', 'world_4_pics/78381034505__9E1BD9B7-4634-4439-B4F1-7F1D2E0A9116.jpg', 'world_4_pics/IMG_0084.jpg', 'world_4_pics/IMG_0709_Original.jpg', 'world_4_pics/IMG_0725_Original.jpg', 'world_4_pics/IMG_2769.jpg', 'world_4_pics/IMG_3092.jpg', 'world_4_pics/IMG_3664.jpg'] },
+  { name:'WORLD 5', subtitle:'JOSHUA TREE', width:2400,
+    sky:['#1a1330','#4a3573'], ground:'#c9895a', groundTop:'#d9a06a',
+    decor:[''], collectEmoji:'💛',
+    enemyTypes:['🦂','🐺'], difficulty:6, 
+    photos:['world_5_pics/image.jpg', 'world_5_pics/image2.jpg', 'world_5_pics/image3.jpg', 'world_5_pics/image4.jpg', 'world_5_pics/image5.jpg', 'world_5_pics/image6.jpg', 'world_5_pics/image7.jpg', 'world_5_pics/image8.jpg', 'world_5_pics/image9.jpg', 'world_5_pics/image10.jpg', 'world_5_pics/IMG_0002.jpg', 'world_5_pics/IMG_0057.jpg'] },
+  { name:'WORLD 6', subtitle:'FIND ME', width:2000, isFinale:true,
+    sky:['#f6d186','#2c2150'], ground:'#e79bb0', groundTop:'#f0c2d4',
+    decor:[''], collectEmoji:'💛',
+    photos:['world_6_pics/IMG_0569.jpg', 'world_6_pics/IMG_0999.jpg', 'world_6_pics/IMG_1936.jpg', 'world_6_pics/IMG_2055.png', 'world_6_pics/IMG_2496.jpg', 'world_6_pics/IMG_2526.jpg', 'world_6_pics/IMG_2538.jpg', 'world_6_pics/IMG_2636.jpg', 'world_6_pics/IMG_2671.jpg', 'world_6_pics/IMG_2866.jpg', 'world_6_pics/IMG_2951.jpg', 'world_6_pics/IMG_3082.jpg', 'world_6_pics/IMG_4295.jpg'] }
+];
+
+function buildLayoutFor(level){
+  if(level.isFinale) return buildFinaleLayout(level);
+  return buildRandomLayout(level.width, level.difficulty);
+}
+
+/* ---------------- enemies: random pool per level, scaled by difficulty ---------------- */
+function generateEnemies(lvl){
+  if(lvl.isFinale) return [];
+  const count = 1 + Math.floor(lvl.difficulty * 0.7); // more enemies on harder worlds
+  const arr = [];
+  const usedSpots = [];
+
+  for(let i=0; i<count; i++){
+    const type = Math.random() < 0.5 ? 'bob' : 'walk';
+    const emoji = lvl.enemyTypes[Math.floor(Math.random()*lvl.enemyTypes.length)];
+
+    // pick an x spot that isn't too close to spawn, the goal, or another enemy
+    let x, tries=0;
+    do {
+      x = randRange(300, lvl.width-300);
+      tries++;
+    } while(usedSpots.some(u=>Math.abs(u-x)<250) && tries<20);
+    usedSpots.push(x);
+
+    if(type==='bob'){
+      arr.push({
+        type:'bob', spawnX:x, x, rise:randRange(30,140), base:randRange(30,140),
+        dir:1, invuln:0, t:0, emoji
+      });
+    } else {
+      const spread = randRange(80,180);
+      const dir = Math.random()<0.5?1:-1;
+      arr.push({
+        type:'walk', spawnX:x, x, xStart:x-spread/2, xEnd:x+spread/2,
+        rise:0, dir, spawnDir:dir,
+        speed:randRange(70,90)+lvl.difficulty*12,
+        invuln:0, emoji
+      });
+    }
+  }
+  return arr;
+}
+
+function resetEnemies(){
+  enemies.forEach(e=>{
+    e.x = e.spawnX;
+    e.invuln = 0;
+    if(e.type==='bob'){ e.t = 0; e.rise = e.base; }
+    else { e.dir = e.spawnDir; }
+  });
+}
+
+function updateEnemies(dt){
+  enemies.forEach(e=>{
+    if(e.invuln>0) e.invuln -= dt;
+    if(e.type==='bob'){
+      e.t += dt;
+      e.rise = e.base + Math.sin(e.t*2)*30;
+    } else {
+      e.x += e.dir*e.speed*dt;
+      if(e.x>e.xEnd || e.x<e.xStart) e.dir*=-1;
+    }
+  });
+}
+
+/* (pixelated photo-platform rendering removed — World 6 platforms are now
+   plain, and the full-background photo collage covers the "photos" ask) */
+
+/* ======================================================================
+   GAME STATE
+   ====================================================================== */
+let levelIdx = 0;
+let totalCollected = 0;
+let sessionCollected = 0;
+let maxPossible = 0;
+let canvas, ctx, dpr=1, viewW=800, viewH=600;
+let camX=0;
+let checkpointX=100;
+let running=false;
+let runToken=0;
+
+function startGame(){
+  document.getElementById('screen-title').style.display='none';
+  document.getElementById('screen-game').classList.add('active');
+  canvas = document.getElementById('game-canvas');
+  ctx = canvas.getContext('2d');
+  dpr = Math.min(window.devicePixelRatio||1,2);
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  levelIdx = 0;
+  sessionCollected = 0;
+  maxPossible = 0;
+  showIntroCard();
+}
+function resizeCanvas(){
+  viewW=window.innerWidth; viewH=window.innerHeight;
+  canvas.width=viewW*dpr; canvas.height=viewH*dpr;
+  canvas.style.width=viewW+'px'; canvas.style.height=viewH+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+function showIntroCard(){
+  const lvl = LEVELS[levelIdx];
+  document.getElementById('intro-title').textContent = lvl.name + ': ' + lvl.subtitle;
+  document.getElementById('intro-sub').textContent = lvl.isFinale ? 'walk until you find her.' : 'reach the flag at the end!';
+  document.getElementById('intro-card').classList.add('show');
+  document.getElementById('hud-level').textContent = lvl.name;
+}
+
+let level, layout, player, enemies, collected, sceneRunning, lives;
+// ===== PHOTO COLLAGE BACKGROUND =====
+// Fully code-generated: tiles a shuffled grid of your photos across the
+// ENTIRE level width and viewport height so the background is a real collage,
+// not a sparse scatter. Re-shuffles per level so the arrangement is different
+// every time you replay it.
+let collage=[];
+function shuffled(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function buildCollage(){
+  collage = [];
+  if(!level.photos || level.photos.length === 0) return;
+
+  const cellW = 190, cellH = 165;
+  const cols = Math.ceil(level.width/cellW) + 2;   // +2 covers scroll edges
+  const rows = Math.ceil(viewH/cellH) + 1;
+  const needed = cols*rows;
+
+  // build a long shuffled pool (re-shuffling each pass) so photos repeat
+  // evenly across the grid instead of clustering
+  let pool = [];
+  while(pool.length < needed){ pool = pool.concat(shuffled(level.photos)); }
+
+  let idx = 0;
+  for(let r=0; r<rows; r++){
+    for(let c=0; c<cols; c++){
+      const src = pool[idx++];
+      const img = new Image();
+      img.src = src;
+      const w = cellW + randRange(-8,22);
+      collage.push({
+        img,
+        x: (c-1)*cellW + randRange(-16,16),
+        y: r*cellH + randRange(-12,12),
+        w, h: w*0.78,
+        angle: (Math.random()-0.5)*0.09,
+        alpha: 0.95
+      });
+    }
+  }
+}
+// ===== END PHOTO COLLAGE BACKGROUND =====
+
+const START_LIVES = 3;
+
+function beginLevel(){
+  document.getElementById('intro-card').classList.remove('show');
+  level = LEVELS[levelIdx];
+  buildCollage();
+  layout = buildLayoutFor(level);
+  maxPossible += layout.collectibles.length; // counted once per level, not on retries
+  enemies = generateEnemies(level);
+  resetAttempt();
+  runToken++;
+  sceneRunning = true;
+  setupInput();
+  requestAnimationFrame(gameLoop);
+}
+
+function resetAttempt(){
+  // reset player, collectibles, enemies, and lives without re-rolling the
+  // level layout, so a retry gives the same level but a clean slate
+  player = { x:100, y:0, vy:0, onGround:true, facing:1, walking:false, animT:0 };
+  checkpointX = 100;
+  collected = 0;
+  camX = 0;
+  lives = START_LIVES;
+  resetEnemies();
+  layout.collectibles.forEach(c=>c.got=false);
+  document.getElementById('hud-collect').textContent = '💛 '+collected;
+  document.getElementById('hud-lives').innerHTML = '<img src="pics/heart_toes.png" alt="life" class="life-icon">'.repeat(lives);
+}
+
+function retryLevel(){
+  document.getElementById('retry-card').classList.remove('show');
+  resetAttempt();
+  runToken++;
+  sceneRunning = true;
+  requestAnimationFrame(gameLoop);
+}
+
+function loseLife(){
+  lives--;
+  document.getElementById('hud-lives').innerHTML = '<img src="pics/heart_toes.png" alt="life" class="life-icon">'.repeat(Math.max(0,lives)) + '<img src="pics/struggling.png" alt="broken heart" class="life-icon">'.repeat(START_LIVES-Math.max(0,lives));
+  if(lives<=0){
+    sceneRunning = false;
+    document.getElementById('retry-sub').textContent = 'out of hearts, do better';
+    document.getElementById('retry-card').classList.add('show');
+    return true;
+  }
+  return false;
+}
+
+/* ---------------- input ---------------- */
+const keys = { left:false, right:false, jump:false };
+let inputBound=false;
+function setupInput(){
+  if(inputBound) return;
+  inputBound=true;
+  window.addEventListener('keydown', e=>{
+    if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A') keys.left=true;
+    if(e.key==='ArrowRight'||e.key==='d'||e.key==='D') keys.right=true;
+    if(e.key===' '||e.key==='ArrowUp'||e.key==='w'||e.key==='W'){ e.preventDefault(); keys.jump=true; }
+  });
+  window.addEventListener('keyup', e=>{
+    if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A') keys.left=false;
+    if(e.key==='ArrowRight'||e.key==='d'||e.key==='D') keys.right=false;
+    if(e.key===' '||e.key==='ArrowUp'||e.key==='w'||e.key==='W') keys.jump=false;
+  });
+  const bind=(id,dir)=>{
+    const el=document.getElementById(id);
+    const on=(e)=>{e.preventDefault(); keys[dir]=true;};
+    const off=(e)=>{e.preventDefault(); keys[dir]=false;};
+    el.addEventListener('touchstart',on,{passive:false});
+    el.addEventListener('touchend',off,{passive:false});
+    el.addEventListener('mousedown',on);
+    el.addEventListener('mouseup',off);
+    el.addEventListener('mouseleave',off);
+  };
+  bind('btn-left','left'); bind('btn-right','right'); bind('btn-jump','jump');
+}
+
+/* ---------------- physics / loop ---------------- */
+const GRAVITY=1800, JUMP_V=-680, MOVE_SPEED=230;
+let lastT=null;
+
+function gameLoop(ts){
+  if(!sceneRunning) return;
+  if(lastT===null) lastT=ts;
+  const dt=Math.min((ts-lastT)/1000,0.035);
+  lastT=ts;
+  update(dt);
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+function groundYBase(){ return viewH*0.74; }
+
+function inGap(x){
+  return layout.gaps.some(g=> x > g.x && x < g.x+g.w);
+}
+function platformAt(x){
+  // returns platform if player's x within its span
+  return layout.platforms.find(p=> x > p.x-p.w/2 && x < p.x+p.w/2);
+}
+
+function update(dt){
+  let dx = 0;
+  if(keys.left){
+    dx -= 1;
+    player.facing = -1;
+  }
+  if(keys.right){
+    dx += 1;
+    player.facing = 1;
+  }
+
+  player.walking = dx !== 0;
+
+  if(player.walking){
+    player.x += dx * MOVE_SPEED * dt;
+    player.animT += dt;
+  }
+
+  player.x = Math.max(20, Math.min(level.width - 20, player.x));
+
+  if(keys.jump && player.onGround){
+    player.vy = JUMP_V;
+    player.onGround = false;
+  }
+
+  // Gravity
+  player.vy += GRAVITY * dt;
+  player.y += player.vy * dt;
+
+  // Reset each frame. It will become true only if we land.
+  player.onGround = false;
+
+  const gY = groundYBase();
+
+  // Check for a platform under the player
+  const plat = platformAt(player.x);
+
+  // Default standing position is the ground
+  let standY = gY;
+
+  // If there is a platform, let it become the standing surface
+  if (plat) {
+    const platTopY = gY - plat.rise;
+
+    // Landing on top of the platform only
+    if (
+      player.vy >= 0 &&
+      player.y >= platTopY &&
+      player.y - platTopY < 40
+    ) {
+      standY = platTopY;
+    }
+  }
+
+  // Stand on either ground or platform
+  if (!inGap(player.x) || standY !== gY) {
+    if (player.y >= standY) {
+      player.y = standY;
+      player.vy = 0;
+      player.onGround = true;
+      player.falling = false;
+    }
+  } else {
+    // Falling into a gap
+    if (player.y > gY + 220 && !player.falling) {
+      player.falling = true;
+
+      const dead = loseLife();
+
+      if (!dead) {
+        player.x = checkpointX;
+        player.y = gY;
+        player.vy = 0;
+        player.onGround = true;
+        player.falling = false;
+      } else {
+        return;
+      }
+    }
+  }
+
+  // Update checkpoint only while on solid ground
+  if(player.onGround && !inGap(player.x)){
+    checkpointX = Math.max(checkpointX, player.x - 40);
+  }
+
+  // Update enemies
+  updateEnemies(dt);
+
+  for(const e of enemies){
+    const ey = gY - e.rise;
+
+    if(Math.hypot(player.x - e.x, (player.y - 17) - ey) < 34 && !e.invuln){
+      e.invuln = 1.1;
+
+      const dead = loseLife();
+
+      if(dead) return;
+
+      // Small knockback
+      player.x -= player.facing * 60;
+      break;
+    }
+  }
+
+  // Collectibles
+  layout.collectibles.forEach(c => {
+    if(c.got) return;
+
+    const cy = gY - c.rise - 14;
+
+    if(Math.hypot(player.x - c.x, (player.y - 17) - cy) < 26){
+      c.got = true;
+      collected++;
+      totalCollected++;
+
+      document.getElementById('hud-collect').textContent =
+        '💛 ' + collected;
+    }
+  });
+
+  // Goal
+  const goalX = level.width - 120;
+
+  if(player.x >= goalX){
+    onReachGoal();
+  }
+
+  // Camera
+  camX = Math.max(
+    0,
+    Math.min(level.width - viewW, player.x - viewW * 0.4)
+  );
+}
+
+function onReachGoal(){
+  sceneRunning=false;
+  sessionCollected += collected; // banked permanently — retries never double-count this
+  if(level.isFinale){
+    document.getElementById('found-card').classList.add('show');
+  } else {
+    document.getElementById('clear-sub').textContent = 'Collected '+collected+' 💛 in '+level.subtitle;
+    document.getElementById('clear-card').classList.add('show');
+  }
+}
+function nextLevel(){
+  document.getElementById('clear-card').classList.remove('show');
+  levelIdx++;
+  showIntroCard();
+}
+function goFinaleEpilogue(){
+  document.getElementById('found-card').classList.remove('show');
+  document.getElementById('screen-game').classList.remove('active');
+  document.getElementById('screen-finale').classList.add('active');
+  document.getElementById('final-score').textContent = '💛 '+sessionCollected+' / '+maxPossible+' COLLECTED';
+  startSlideshow();
+  burstConfetti();
+}
+
+/* ---------------- draw ---------------- */
+function draw(){
+  const gY = groundYBase();
+  ctx.clearRect(0,0,viewW,viewH);
+
+  // sky
+  const grad = ctx.createLinearGradient(0,0,0,viewH);
+  grad.addColorStop(0, level.sky[0]); grad.addColorStop(1, level.sky[1]);
+  ctx.fillStyle=grad; ctx.fillRect(0,0,viewW,viewH);
+
+  // ===== PHOTO COLLAGE BACKGROUND =====
+  ctx.save();
+  collage.forEach(photo=>{
+    // CRITICAL: a failed/broken image is still "complete" — drawImage on it
+    // throws and silently kills the rest of the frame. Always guard on
+    // naturalWidth too, and never let one bad path break the game.
+    if(!photo.img.complete || photo.img.naturalWidth===0) return;
+    try{
+      ctx.save();
+      ctx.translate(photo.x - camX*0.7, photo.y);
+      ctx.rotate(photo.angle);
+      ctx.globalAlpha = photo.alpha;
+      ctx.fillStyle = '#fbf6ee';
+      ctx.fillRect(-4,-4, photo.w+8, photo.h+8);
+      ctx.drawImage(photo.img, 0, 0, photo.w, photo.h);
+      ctx.restore();
+    } catch(err){ /* skip this tile, keep the frame alive */ }
+  });
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  // gentle scrim so ground/player/UI stay readable over a busy photo backdrop
+  ctx.fillStyle = 'rgba(10,8,20,0.22)';
+  ctx.fillRect(0,0,viewW,viewH);
+  // ===== END PHOTO COLLAGE BACKGROUND =====
+
+  ctx.save();
+  ctx.translate(-camX,0);
+
+  // parallax decor
+  const decorSeed = 37;
+  ctx.font='26px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(let i=0;i<18;i++){
+    const dx = (i*decorSeed*7)%level.width;
+    const dy = 40 + (i*53)%(gY-100);
+    ctx.globalAlpha=0.5;
+    ctx.fillText(level.decor[i%level.decor.length], dx, dy);
+  }
+  ctx.globalAlpha=1;
+
+  // ground with gaps
+  ctx.fillStyle = level.ground;
+  if(layout.gaps.length===0){
+    ctx.fillRect(0, gY, level.width, viewH-gY+40);
+  } else {
+    let segStart=0;
+    const sorted = layout.gaps.slice().sort((a,b)=>a.x-b.x);
+    sorted.forEach(g=>{
+      ctx.fillRect(segStart, gY, g.x-segStart, viewH-gY+40);
+      segStart = g.x+g.w;
+    });
+    ctx.fillRect(segStart, gY, level.width-segStart, viewH-gY+40);
+  }
+  ctx.fillStyle = level.groundTop;
+  if(layout.gaps.length===0){ ctx.fillRect(0,gY,level.width,6); }
+  else {
+    let segStart=0;
+    const sorted = layout.gaps.slice().sort((a,b)=>a.x-b.x);
+    sorted.forEach(g=>{ ctx.fillRect(segStart,gY,g.x-segStart,6); segStart=g.x+g.w; });
+    ctx.fillRect(segStart,gY,level.width-segStart,6);
+  }
+
+  // platforms — plain style for every level now (World 6's "photos" ask is
+  // handled by the full background collage, not per-platform textures)
+  layout.platforms.forEach(p=>{
+    const topY = gY - p.rise;
+    ctx.fillStyle = level.groundTop;
+    ctx.fillRect(p.x-p.w/2, topY, p.w, 20);
+    ctx.fillStyle = level.ground;
+    ctx.fillRect(p.x-p.w/2, topY+20, p.w, 10);
+  });
+
+  // collectibles
+  ctx.font='24px sans-serif';
+  layout.collectibles.forEach(c=>{
+    if(c.got) return;
+    ctx.fillText(level.collectEmoji, c.x, gY-c.rise-14);
+  });
+
+  // enemies
+  ctx.font='40px sans-serif';
+  enemies.forEach(e=>{
+    drawShadow(ctx, e.x, gY-e.rise);
+    ctx.fillText(e.emoji, e.x, gY-e.rise-20);
+  });
+
+  // goal
+  if(level.isFinale){
+    const meX = level.width-90, meY = gY-(layout.meRise||0);
+    // cute little glow backdrop for the reunion moment
+    const glow = ctx.createRadialGradient(meX, meY-45, 5, meX, meY-45, 95);
+    glow.addColorStop(0, 'rgba(246,209,134,0.55)');
+    glow.addColorStop(1, 'rgba(246,209,134,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(meX, meY-45, 95, 0, Math.PI*2); ctx.fill();
+    // a few sparkles/hearts floating around
+    ctx.font='16px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    const t2 = performance.now()/600;
+    [[-58,-78,'✨',0],[52,-92,'💛',1],[-42,-24,'✨',2],[58,-30,'💛',3]].forEach(([dx,dy,em,ph])=>{
+      const bob = Math.sin(t2+ph)*4;
+      ctx.fillText(em, meX+dx, meY+dy+bob);
+    });
+    // "me" stands on the final platform, not on the (nonexistent) ground
+    drawShadow(ctx, meX, meY);
+    drawSprite(ctx, FRAME_ME, PALETTE_ME, meX, meY, 1, 4);
+  } else {
+    // pole
+    ctx.fillStyle='#F8FF00';
+    ctx.fillRect(level.width-121, gY-140, 9, 140);
+    ctx.fillStyle='#F8FF00';
+    ctx.fillRect(level.width-121, gY-140, 9, 6);
+    // flag — bold, outlined, high-contrast
+    ctx.beginPath();
+    ctx.moveTo(level.width-112, gY-140);
+    ctx.lineTo(level.width-72, gY-125);
+    ctx.lineTo(level.width-112, gY-110);
+    ctx.closePath();
+    ctx.fillStyle='#FA002E';
+    ctx.fill();
+    ctx.lineWidth=3;
+    ctx.strokeStyle='#F8FF00';
+    ctx.stroke();
+  }
+
+  // player
+  const frame = !player.onGround ? FRAME_JUMP : (player.walking ? (Math.floor(player.animT*8)%2===0?FRAME_WALK_A:FRAME_WALK_B) : FRAME_STAND);
+  drawShadow(ctx, player.x, player.y);
+  drawSprite(ctx, frame, PALETTE, player.x, player.y, player.facing, 4);
+
+  ctx.restore();
+}
+
+/* ======================================================================
+   SLIDESHOW + CONFETTI (epilogue)
+   ====================================================================== */
+const SLIDES = [
+  {bg:"url('pics/aqua.jpg') center/cover", cap:'Aquarium, date one'},
+  {bg:"url('pics/ice.jpg') center/cover", cap:'Ice skating, date two'},
+  {bg:"url('pics/jt.jpg') center/cover", cap:'Joshua Tree'},
+  {bg:"url('pics/beach.jpg') center/cover", cap:'Beach days'},
+  {bg:"url('pics/dallas.jpg') center/cover", cap:'Dallas visit'},
+  {bg:"url('pics/house.png') center/cover", cap:'Our Minecraft world'},
+  {bg:"url('pics/couch.jpg') center/cover", cap:'Dinners & movie nights'},
+  {bg:"url('pics/one_year.jpg') center/cover", cap:'Us, one year in'},
+  {bg:"url('pics/photostrip.png') center/cover", cap:'I LOVE YOU'}
+];
+let slideIdx=0, slideTimer=null;
+function buildSlideshow(){
+  const wrap=document.getElementById('slideshow'); wrap.innerHTML='';
+  const dots=document.getElementById('dots'); dots.innerHTML='';
+  SLIDES.forEach(s=>{
+    const d=document.createElement('div'); d.className='slide'; d.style.background=s.bg;
+    d.innerHTML=`<div class="cap">${s.cap}</div>`;
+    wrap.appendChild(d);
+    const dot=document.createElement('div'); dot.className='dot'; dots.appendChild(dot);
+  });
+}
+function renderSlide(){
+  document.querySelectorAll('.slide').forEach((s,i)=>s.classList.toggle('active', i===slideIdx));
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('on', i===slideIdx));
+}
+function shiftSlide(dir){ slideIdx=(slideIdx+dir+SLIDES.length)%SLIDES.length; renderSlide(); resetTimer(); }
+function resetTimer(){ clearInterval(slideTimer); slideTimer=setInterval(()=>{ slideIdx=(slideIdx+1)%SLIDES.length; renderSlide(); }, 3200); }
+function startSlideshow(){ if(!document.getElementById('slideshow').childElementCount) buildSlideshow(); slideIdx=0; renderSlide(); resetTimer(); }
+
+const confettiCanvas = document.getElementById('confetti');
+const cctx = confettiCanvas.getContext('2d');
+function resizeConfetti(){ confettiCanvas.width=innerWidth; confettiCanvas.height=innerHeight; }
+resizeConfetti(); window.addEventListener('resize', resizeConfetti);
+function burstConfetti(){
+  const colors=['#f2966b','#f6d186','#6fcfc0','#e79bb0','#fbf6ee'];
+  const particles=Array.from({length:90},()=>({
+    x:confettiCanvas.width/2, y:confettiCanvas.height*0.35,
+    vx:(Math.random()-0.5)*10, vy:Math.random()*-8-2,
+    size:Math.random()*6+4, color:colors[Math.floor(Math.random()*colors.length)],
+    rot:Math.random()*360, vr:(Math.random()-0.5)*10, life:0
+  }));
+  let frame=0;
+  function tick(){
+    cctx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+    frame++;
+    particles.forEach(p=>{
+      p.vy+=0.25; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr; p.life++;
+      cctx.save(); cctx.translate(p.x,p.y); cctx.rotate(p.rot*Math.PI/180);
+      cctx.fillStyle=p.color; cctx.globalAlpha=Math.max(0,1-p.life/90);
+      cctx.fillRect(-p.size/2,-p.size/2,p.size,p.size);
+      cctx.restore();
+    });
+    if(frame<100) requestAnimationFrame(tick); else cctx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+  }
+  tick();
+}
+</script>
+</body>
+</html>
